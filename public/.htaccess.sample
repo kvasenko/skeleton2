@@ -1,0 +1,79 @@
+SetEnv BLUZ_ENV production
+SetEnv BLUZ_DEBUG_KEY BLUZ_DEBUG
+
+AddDefaultCharset UTF-8
+
+Options +FollowSymlinks
+Options -Indexes
+
+# PHP Settings
+<ifModule mod_php5.c>
+    php_flag magic_quotes_gpc 0
+</ifModule>
+
+# Enable ETag
+# send modified time and size
+FileETag MTime Size
+
+# Mod Deflate
+<ifModule mod_deflate.c>
+	AddOutputFilterByType DEFLATE text/html text/xml text/plain text/css
+	AddOutputFilterByType DEFLATE text/javascript application/json application/javascript application/x-javascript
+</ifModule>
+
+# Mod Expires
+<ifModule mod_expires.c>
+    Header append Cache-Control "public"
+    FileETag MTime Size
+    ExpiresActive On
+    ExpiresDefault "access plus 7 days"
+    ExpiresByType text/xml "access plus 30 days"
+    ExpiresByType text/plain "access plus 30 days"
+    ExpiresByType text/css "access plus 30 days"
+    ExpiresByType text/javascript "access plus 30 days"
+  	ExpiresByType application/x-javascript "access plus 30 days"
+    ExpiresByType image/ico "access plus 30 days"
+    ExpiresByType image/gif "access plus 30 days"
+    ExpiresByType image/jpg "access plus 30 days"
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/png "access plus 30 days"
+</ifModule>
+
+# Mod Header
+<ifModule mod_headers.c>
+	<filesMatch "\.(ico|jpe?g|png|gif|swf|flv)$">
+	 	# 30 days
+		Header set Cache-Control "max-age=2592000, public, no-transform"
+		FileETag None
+	</filesMatch>
+	<filesMatch "\.(css|js)$">
+		# 30 days or change source
+		Header set Cache-Control "max-age=2592000, public, no-transform"
+	</filesMatch>
+	<filesMatch "\.(xml|pdf|txt)$">
+		# 7 days or change source
+	    Header set Cache-Control "max-age=604800, public, must-revalidate"
+	</filesMatch>
+	<filesMatch "\.(html|htm|php)$">
+		# 1 hour or change source
+		Header set Cache-Control "max-age=3600, private, must-revalidate"
+	</filesMatch>
+</ifModule>
+
+# Mod Rewrite
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteBase /
+
+	# loop stopping
+	RewriteCond %{ENV:REDIRECT_STATUS} 200
+	RewriteRule .* - [L]
+
+	RewriteCond %{REQUEST_FILENAME} -s [OR]
+	RewriteCond %{REQUEST_FILENAME} -l [OR]
+	RewriteCond %{REQUEST_FILENAME} -d [OR]
+	RewriteCond %{REQUEST_URI} ^/(css|font|img|js|uploads) [OR]
+	RewriteCond %{REQUEST_URI} \.(ico|jpe?g|png|svg|gif|swf|flv)$
+	RewriteRule ^.*$ - [NC,L]
+	RewriteRule ^.*$ index.php [NC,L]
+</IfModule>
